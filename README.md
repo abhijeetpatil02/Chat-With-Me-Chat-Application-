@@ -167,6 +167,8 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 **Abhijeet Patil**
 
+[![Portfolio](https://img.shields.io/badge/Portfolio-abhijeetp--portfolio.netlify.app-ff5722?style=flat&logo=netlify)](https://abhijeetp-portfolio.netlify.app/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-abhijeetp02-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/in/abhijeetp02/)
 [![GitHub](https://img.shields.io/badge/GitHub-abhijeetpatil02-181717?style=flat&logo=github)](https://github.com/abhijeetpatil02)
 
 Project Link: [https://github.com/abhijeetpatil02/Chat-With-Me-Chat-Application-](https://github.com/abhijeetpatil02/Chat-With-Me-Chat-Application-)

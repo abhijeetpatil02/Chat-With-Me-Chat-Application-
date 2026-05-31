@@ -8,28 +8,7 @@
 
 **A modern, real-time chat application where you can connect and converse instantly.**
 
-[🌐 Live Demo](https://chat-application-lk1e.onrender.com/login) • [📂 Repository](https://github.com/abhijeetpatil02/Chat-With-Me-Chat-Application-) • [🐛 Report Bug](https://github.com/abhijeetpatil02/Chat-With-Me-Chat-Application-/issues)
-
 </div>
-
----
-
-## 📋 Table of Contents
-
-- [About the Project](#about-the-project)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Running Locally](#running-locally)
-- [Project Structure](#project-structure)
-- [Live Demo](#live-demo)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
-
----
 
 ## 📖 About the Project
 
@@ -60,48 +39,6 @@
 | **Hosting** | Render |
 
 > *(Update this table to match your exact stack if anything differs)*
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-Make sure you have the following installed:
-
-- [Node.js](https://nodejs.org/) (v14 or higher)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
-- [MongoDB](https://www.mongodb.com/) (local or MongoDB Atlas)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/abhijeetpatil02/Chat-With-Me-Chat-Application-.git
-   cd Chat-With-Me-Chat-Application-
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-
-   Create a `.env` file in the root directory:
-   ```env
-   PORT=3000
-   MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret_key
-   ```
-
-### Running Locally
-
-```bash
-npm start
-```
-
-Open your browser and navigate to `http://localhost:3000`
 
 ---
 

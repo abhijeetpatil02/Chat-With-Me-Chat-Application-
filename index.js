@@ -1,3 +1,4 @@
+require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
 const express = require('express');
@@ -31,13 +32,13 @@ app.use(sessionMiddleware);
 const dbConfig = {
     host: process.env.DB_HOST || process.env.HOST || "127.0.0.1",
     user: process.env.DB_USER || process.env.USER || "root", // Added process.env.USER
-    password: process.env.DB_PASSWORD || process.env.PASSWORD || "Sanket@123",
+    password: process.env.DB_PASSWORD || process.env.PASSWORD || "Abbhijeet@123",
     port: process.env.DB_PORT || 3306, // Default to 3306 for MySQL
-    database: process.env.DB_NAME || "test",
+    database: process.env.DB_NAME || "chat_with_me",
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    ssl: (process.env.HOST || process.env.DB_HOST) ? {
+    ssl: (process.env.DB_SSL === 'true') ? {
         minVersion: 'TLSv1.2',
         rejectUnauthorized: false
     } : false

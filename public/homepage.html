@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ChatWithMe - Discover</title>
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6b73ff">
+    <link rel="icon" type="image/png" href="/icons/icon-192.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #2d3436;
+            --text-secondary: #636e72;
+            --accent-color: #6c5ce7;
+        }
+
+        /* Basic Reset */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fd;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Faster Intro Animation Scene */
+        .scene {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #000000;
+            /* Sleek pure black */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+
+        .loader-logo {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .avatar-cluster {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .avatar-anim {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.05);
+            /* Very subtle white */
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .avatar-anim:nth-child(1) {
+            top: 0;
+            left: 70px;
+            animation: orbit 4s linear infinite;
+        }
+
+        .avatar-anim:nth-child(2) {
+            bottom: 0;
+            left: 70px;
+            animation: orbit 4s linear infinite reverse;
+        }
+
+        .avatar-anim:nth-child(3) {
+            left: 0;
+            top: 70px;
+            animation: orbit 4s linear infinite;
+            animation-delay: -1s;
+        }
+
+        .avatar-anim:nth-child(4) {
+            right: 0;
+            top: 70px;
+            animation: orbit 4s linear infinite;
+            animation-delay: -2s;
+        }
+
+        @keyframes orbit {
+            from {
+                transform: rotate(0deg) translateX(80px) rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg) translateX(80px) rotate(-360deg);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+
+        /* Main Dashboard Content */
+        #homepage {
+            opacity: 0;
+            transition: opacity 1s ease;
+            padding-top: 80px;
+            /* Navbar space */
+        }
+
+        nav {
+            background: white;
+            padding: 0 5%;
+            height: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 90%;
+            left: 5%;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border-radius: 0 0 24px 24px;
+            box-sizing: border-box;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .logo span {
+            font-weight: 700;
+            font-size: 20px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-container {
+            flex: 1;
+            margin: 0 40px;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 24px 12px 48px;
+            border: 1px solid #edf2f7;
+            border-radius: 16px;
+            font-size: 14px;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .search-container input:focus {
+            background: white;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1);
+            outline: none;
+        }
+
+        .search-container::before {
+            content: '🔍';
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            opacity: 0.5;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .menu-btn {
+            background: #f7fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 20px;
+        }
+
+        .menu-btn:hover {
+            background: #edf2f7;
+            transform: scale(1.05);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 70px;
+            right: 0;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: none;
+            flex-direction: column;
+            min-width: 220px;
+            padding: 10px;
+            border: 1px solid #edf2f7;
+            z-index: 1001;
+        }
+
+        .dropdown-menu a,
+        .dropdown-menu button {
+            padding: 14px 16px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 500;
+            border-radius: 12px;
+            transition: 0.2s;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dropdown-menu a:hover,
+        .dropdown-menu button:hover {
+            background: #f8f9fd;
+            color: var(--accent-color);
+        }
+
+        /* Hero Section */
+        header {
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+
+        header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        /* Project Grid */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 0 5% 80px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .project {
+            background: white;
+            border-radius: 28px;
+            padding: 35px 25px;
+            text-align: center;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #edf2f7;
+        }
+
+        .project:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+        }
+
+        .close-suggestion {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            background: #f7fafc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #cbd5e0;
+            transition: 0.2s;
+        }
+
+        .close-suggestion:hover {
+            background: #fff5f5;
+            color: #f56565;
+        }
+
+        .avatar-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 35%;
+            background: var(--primary-gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 20px rgba(107, 115, 255, 0.2);
+            transform: rotate(-3deg);
+            transition: transform 0.3s;
+        }
+
+        .project:hover .avatar-placeholder {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .project h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .project .email {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .project button {
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-add {
+            background: var(--accent-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
+        }
+
+        .btn-add:hover {
+            background: #5f27cd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        .btn-chat {
+            background: #00b894;
+            color: white;
+        }
+
+        .btn-remove {
+            background: #f7fafc;
+            color: #f56565;
+            border: 1px solid #fed7d7;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                width: 96%;
+                left: 2%;
+                padding: 0 15px;
+                height: 70px;
+                top: 10px;
+                border-radius: 20px;
+            }
+
+            .search-container {
+                margin: 0 10px;
+            }
+
+            .logo span {
+                display: none;
+            }
+
+            /* Hide text logo on small screens to save space */
+            header h1 {
+                font-size: 28px;
+            }
+
+            .project-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 15px;
+                padding: 0 15px 100px;
+            }
+
+            .project {
+                padding: 20px 15px;
+            }
+
+            .avatar-placeholder {
+                width: 70px;
+                height: 70px;
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 24px;
+            }
+
+            .project-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dropdown-menu {
+                width: calc(100vw - 40px);
+                right: -10px;
+            }
+        }
+
+        /* PWA Install Banner */
+        .pwa-banner {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(255, 69, 0, 0.3);
+            display: none;
+            /* Hidden by default */
+            z-index: 9999;
+            width: 350px;
+            animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100px) scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .pwa-banner-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .pwa-icon {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 24px;
+        }
+
+        .pwa-title {
+            flex: 1;
+        }
+
+        .pwa-title h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .pwa-title p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .close-pwa {
+            cursor: pointer;
+            font-size: 20px;
+            opacity: 0.7;
+            transition: 0.2s;
+        }
+
+        .close-pwa:hover {
+            opacity: 1;
+        }
+
+        .pwa-btn {
+            background: white;
+            color: #ff4500;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pwa-btn:hover {
+            background: #fff5f0;
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 480px) {
+            .pwa-banner {
+                bottom: 20px;
+                right: 20px;
+                left: 20px;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="scene" id="animation-scene">
+        <div class="loader-logo">CWM</div>
+        <div class="avatar-cluster">
+            <div class="avatar-anim">C</div>
+            <div class="avatar-anim">W</div>
+            <div class="avatar-anim">M</div>
+            <!-- <div class="avatar-anim">D</div> -->
+        </div>
+        <p style="color: white; margin-top: 40px; font-weight: 300; opacity: 0.8;">Connecting you to the world...</p>
+    </div>
+
+    <div id="homepage">
+        <nav>
+            <div class="logo">
+                <img src="/icons/icon-192.png" alt="Logo">
+                <span>ChatWithMe</span>
+            </div>
+            <div class="search-container">
+                <input type="text" id="search" placeholder="Search people..." oninput="filterSuggestions()">
+            </div>
+            <div class="nav-actions">
+                <div class="menu-container">
+                    <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="profile.html">👤 My Profile</a>
+                        <a href="Chats.html">💬 My Friends</a>
+                        <p id="user-email"></p>
+                        <div id="removedFriendsSection"
+                            style="padding: 10px; border-top: 1px solid #edf2f7; display:none;">
+                            <p
+                                style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; font-weight: 700;">
+                                Removed Friends</p>
+                            <div id="removedFriendsList"></div>
+                        </div>
+                        <button id="installApp" onclick="installPWA()" style="display: none;">📲 Install App</button>
+                        <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 8px 0; width: 100%;">
+                        <a href="/logout" onclick="logout()" style="color: #f56565;">🚪 Logout</a>
+
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <header>
+            <h1>Find Someone New</h1>
+            <p>Connect with people around the globe instantly.</p>
+        </header>
+
+        <section id="projects">
+            <div class="project-grid" id="projectGrid">
+                <!-- Users will be dynamically loaded here -->
+            </div>
+            <div id="friendRequestsContainer" style="position:fixed;top:90px;right:20px;z-index:2000;max-width:300px;">
+                <!-- Friend request notifications will be injected here -->
+            </div>
+            <div id="notificationContainer" style="position:fixed;bottom:20px;left:20px;z-index:9999;"></div>
+
+            <!-- PWA Install Banner -->
+            <div id="pwaBanner" class="pwa-banner">
+                <div class="pwa-banner-header">
+                    <div class="pwa-icon">📥</div>
+                    <div class="pwa-title">
+                        <h2>Install Our App</h2>
+                        <p>Get quick access and stay connected with your friends faster!</p>
+                    </div>
+                    <div class="close-pwa" onclick="closePWABanner()">✕</div>
+                </div>
+                <button class="pwa-btn" onclick="installPWA()">Install Now</button>
+            </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/notifications.js"></script>
+    <script>
+        window.socket = io();
+        const socket = window.socket;
+        // Robust session check
+        async function checkSession() {
+            const savedUser = localStorage.getItem("chatUser");
+            const savedPass = localStorage.getItem("chatPass");
+            
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    const user = await res.json();
+                    // Sync localStorage if it was missing (e.g., after signup or cleared storage)
+                    if (!savedUser || savedUser !== user.email) {
+                        localStorage.setItem("chatUser", user.email);
+                    }
+                    const userDisplay = document.getElementById("user-email");
+                    if (userDisplay) {
+                        userDisplay.textContent = "Logged in as: " + user.email;
+                    }
+                    return true;
+                } else if (res.status === 401) {
+                    // Try to re-login silently
+                    if (savedUser && savedPass) {
+                        try {
+                            const password = atob(savedPass);
+                            const loginRes = await fetch("/Login", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/x-www-form-urlencoded"
+                                },
+                                body: new URLSearchParams({
+                                    email_id: savedUser,
+                                    Passwords: password
+                                })
+                            });
+                            
+                            if (loginRes.ok && !loginRes.url.includes("login_error")) {
+                                console.log("Auto-login successful");
+                                const userDisplay = document.getElementById("user-email");
+                                if (userDisplay) {
+                                    userDisplay.textContent = "Logged in as: " + savedUser;
+                                }
+                                return true;
+                            }
+                        } catch (e) {
+                            console.error("Auto-login failed", e);
+                        }
+                    }
+
+                    localStorage.removeItem("chatUser");
+                    localStorage.removeItem("chatPass");
+                    window.location.href = "/login";
+                    return false;
+                }
+            } catch (err) {
+                console.error("Session check failed", err);
+                // If we can't reach the server but have a saved user, we might be offline
+                if (!savedUser) {
+                    window.location.href = "/login";
+                }
+            }
+        }
+
+        // Initialize session check
+        checkSession();
+
+        function logout() {
+            localStorage.removeItem("chatUser");
+            localStorage.removeItem("chatPass");
+            window.location.href = "/logout"; // Use the server logout route
+        }
+        // Smooth transition from loader
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const scene = document.getElementById('animation-scene');
+                const home = document.getElementById('homepage');
+                if (scene) {
+                    scene.style.opacity = '0';
+                    scene.style.visibility = 'hidden';
+                    setTimeout(() => {
+                        home.style.opacity = '1';
+                        loadUsers();
+                    }, 400);
+                }
+            }, 1800); // Reduced to 1.8s for better UX
+        });
+
+        // Notifications
+        function showNotification(msg) {
+            const container = document.getElementById('notificationContainer');
+            const toast = document.createElement('div');
+            toast.style = "background: #333; color: white; padding: 10px 20px; border-radius: 8px; margin-top: 10px;";
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Load pending friend requests
+        async function loadFriendRequests() {
+            try {
+                const res = await fetch('/api/friend-requests');
+                if (!res.ok) return;
+                const requests = await res.json();
+                const container = document.getElementById('friendRequestsContainer');
+                container.innerHTML = '';
+                requests.forEach(req => {
+                    const displayName = req.requester_name || req.requester_email.split('@')[0];
+                    const div = document.createElement('div');
+                    div.style.background = 'white';
+                    div.style.border = '1px solid #edf2f7';
+                    div.style.borderRadius = '12px';
+                    div.style.padding = '12px';
+                    div.style.marginBottom = '8px';
+                    div.innerHTML = `<strong>${displayName}</strong> wants to be your friend.
+                        <button style="margin-left:8px;" onclick="acceptFriend('${req.requester_email}', '${displayName}')">Accept</button>`;
+                    container.appendChild(div);
+                });
+            } catch (e) { console.error('Error loading friend requests', e); }
+        }
+
+        async function acceptFriend(email, name) {
+            try {
+                const res = await fetch('/api/accept-friend', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requester_email: email, requester_name: name })
+                });
+                if (res.ok) {
+                    alert('You are now friends with ' + name);
+                    loadFriendRequests();
+                } else {
+                    alert('Failed to accept friend');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Initialize friend request loading and socket listeners
+        loadFriendRequests();
+        socket.on('friend request', data => {
+            showNotification(`${data.name || data.from} sent you a friend request`);
+            loadFriendRequests();
+        });
+        socket.on('friend accepted', data => {
+            showNotification(`${data.by} accepted your friend request`);
+            loadUsers();
+        });
+
+        // --- Global Video Call Listener is now handled by notifications.js ---
+        async function loadUsers() {
+            let currentUser = null;
+            let friends = [];
+            let sentRequests = [];
+            let removedFriends = [];
+            try {
+                const [friendsRes, sentRes, removedRes] = await Promise.all([
+                    fetch('/api/friends'),
+                    fetch('/api/sent-requests'),
+                    fetch('/api/removed-friends')
+                ]);
+
+                if (friendsRes.ok) friends = await friendsRes.json();
+                if (sentRes.ok) sentRequests = await sentRes.json();
+                if (removedRes.ok) removedFriends = await removedRes.json();
+                
+                // Get current user from localStorage or previously set variable
+                const savedUser = localStorage.getItem("chatUser");
+                currentUser = { email: savedUser }; 
+            } catch (err) { console.error("Friends check failed", err); }
+
+
+            try {
+                const response = await fetch('/api/users');
+                const dbUsers = await response.json();
+
+                const projectGrid = document.getElementById('projectGrid');
+                projectGrid.innerHTML = '';
+
+                const hiddenUsers = JSON.parse(localStorage.getItem('hiddenUsers')) || [];
+                const removedEmails = removedFriends.map(f => f.friend_email);
+
+                dbUsers.forEach(user => {
+                    if (currentUser && user.email_id === currentUser.email) return;
+                    if (hiddenUsers.includes(user.email_id)) return;
+                    if (removedEmails.includes(user.email_id)) return; // Exclude removed friends from main grid
+
+                    const normalizedEmail = user.email_id.toLowerCase();
+                    const isFriend = friends.some(f => f.friend_email.toLowerCase() === normalizedEmail);
+                    const isPending = sentRequests.some(email => email.toLowerCase() === normalizedEmail);
+
+                    const projectDiv = document.createElement('div');
+                    projectDiv.className = 'project';
+                    projectDiv.dataset.email = user.email_id;
+
+                    let buttonHTML = '';
+                    if (isFriend) {
+                        buttonHTML = `
+                        <div style="display: flex; gap: 5px; width: 100%;">
+                            <button class="btn-chat" style="flex:1;" onclick="goToChat('${user.UserName}', '${user.email_id}')">Chat</button>
+                            <button onclick="removeFriendFromSearch(this, '${user.email_id}', '${user.UserName}')" style="background:#fff5f5; color:#ff4757; border:1px solid #ff4757; border-radius:12px; padding:0 15px; cursor:pointer; font-weight:bold;" title="Remove Friend">✕</button>
+                        </div>`;
+                    } else if (isPending) {
+                        buttonHTML = `<button class="btn-add" style="background:#b2bec3;cursor:default;" disabled>Request Sent</button>`;
+                    } else {
+                        buttonHTML = `<button class="btn-add" onclick="handleAddFriend(this)">Add Friend</button>`;
+                    }
+
+                    projectDiv.innerHTML = `
+                        <span class="close-suggestion" onclick="hideSuggestion('${user.email_id}')">✕</span>
+                        <div class="avatar-placeholder">${user.UserName.charAt(0).toUpperCase()}</div>
+                        <h3>${user.UserName}</h3>
+                        <p class="email">${user.email_id}</p>
+                        <div class="btn-group">
+                            ${buttonHTML}
+                        </div>
+                    `;
+                    projectGrid.appendChild(projectDiv);
+                });
+            } catch (error) {
+                console.error("Error fetching users:", error);
+            }
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('dropdownMenu');
+            const isOpening = menu.style.display !== 'flex';
+            menu.style.display = isOpening ? 'flex' : 'none';
+            if (isOpening) loadRemovedFriends();
+        }
+
+        async function loadRemovedFriends() {
+            try {
+                const res = await fetch('/api/removed-friends');
+                const removed = await res.json();
+                const section = document.getElementById('removedFriendsSection');
+                const list = document.getElementById('removedFriendsList');
+
+                if (removed.length > 0) {
+                    section.style.display = 'block';
+                    list.innerHTML = removed.map(u => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 8px; border-bottom: 1px solid #f8f9fd;">
+                            <span style="font-size:13px; font-weight:500;">${u.friend_name}</span>
+                            <button onclick="restoreFriend(event, '${u.friend_email}')" style="background:var(--accent-color); border:none; color:white; font-size:11px; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:600;">Restore</button>
+                        </div>
+                    `).join('');
+                } else {
+                    section.style.display = 'none';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function restoreFriend(event, email) {
+            if (event) event.stopPropagation();
+            try {
+                const res = await fetch('/api/restore-friend', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ friend_email: email })
+                });
+                if (res.ok) {
+                    showNotification("Friend restored!");
+                    loadRemovedFriends();
+                    loadUsers();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        window.addEventListener('click', (e) => {
+            const menu = document.getElementById('dropdownMenu');
+            const menuBtn = document.querySelector('.menu-btn');
+            if (menu && menu.style.display === 'flex') {
+                if (!menu.contains(e.target) && !e.target.closest('.menu-btn')) {
+                    menu.style.display = 'none';
+                }
+            }
+        });
+
+        function hideSuggestion(email) {
+            const hiddenUsers = JSON.parse(localStorage.getItem('hiddenUsers')) || [];
+            hiddenUsers.push(email);
+            localStorage.setItem('hiddenUsers', JSON.stringify(hiddenUsers));
+            const card = document.querySelector(`.project[data-email="${email}"]`);
+            if (card) {
+                card.style.transform = 'scale(0.8)';
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
+            }
+        }
+
+        async function handleAddFriend(button) {
+            const card = button.closest('.project');
+            const name = card.querySelector('h3').textContent;
+            const email = card.dataset.email;
+
+            button.disabled = true;
+            button.textContent = "Requesting...";
+
+            try {
+                const res = await fetch('/api/request-friend', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ friend_email: email, friend_name: name })
+                });
+                if (res.ok) {
+                    button.parentElement.innerHTML = `<button class="btn-add" style="background:#b2bec3;cursor:default;" disabled>Request Sent</button>`;
+                } else {
+                    button.disabled = false;
+                    button.textContent = "Add Friend";
+                    alert('Failed to send friend request');
+                }
+            } catch (err) {
+                button.disabled = false;
+                button.textContent = "Add Friend";
+                alert('Connection error');
+            }
+        }
+
+        async function removeFriendFromSearch(button, email, name) {
+            if (!confirm(`Are you sure you want to remove ${name} from your friends?`)) return;
+            
+            button.disabled = true;
+            try {
+                const res = await fetch('/api/remove-friend', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ friend_email: email, friend_name: name })
+                });
+
+                if (res.ok) {
+                    loadUsers();
+                } else {
+                    alert("Failed to remove friend.");
+                    button.disabled = false;
+                }
+            } catch (err) {
+                alert("Operation failed. Try again.");
+                button.disabled = false;
+            }
+        }
+
+        function goToChat(name, email) {
+            window.location.href = `personal_chat.html?user=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
+        }
+
+        function filterSuggestions() {
+            const query = document.getElementById('search').value.toLowerCase();
+            document.querySelectorAll('.project').forEach(card => {
+                const name = card.querySelector('h3').textContent.toLowerCase();
+                card.style.display = name.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        // PWA - Service Worker registration and install handling
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered', reg))
+                    .catch(err => console.error('SW registration failed', err));
+            });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI notify the user they can install the PWA
+            const banner = document.getElementById('pwaBanner');
+            const menuBtn = document.getElementById('installApp');
+            if (banner && !localStorage.getItem('pwaDismissed')) {
+                banner.style.display = 'block';
+            }
+            if (menuBtn) {
+                menuBtn.style.display = 'flex';
+            }
+        });
+
+        async function installPWA() {
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                // We've used the prompt, and can't use it again, throw it away
+                deferredPrompt = null;
+                // Hide the banner
+                document.getElementById('pwaBanner').style.display = 'none';
+            }
+        }
+
+        function closePWABanner() {
+            document.getElementById('pwaBanner').style.display = 'none';
+            // Remember the user dismissed it so we don't show it every time
+            localStorage.setItem('pwaDismissed', 'true');
+        }
+
+    </script>
+</body>
+
+</html>

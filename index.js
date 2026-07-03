@@ -9,7 +9,7 @@ const mysql2 = require('mysql2');
 const webpush = require('web-push');
 const app = express();
 
-// your PWA / service worker code
+// your PWA / service worker code code 
 // app.use(express.static("public"));
 
 app.use(express.json());
@@ -186,7 +186,7 @@ app.post('/api/subscribe', (req, res) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Unauthorized' });
     const subscription = req.body;
     const user_email = req.session.user.email.toLowerCase();
-    
+
     const SQL = "INSERT IGNORE INTO push_subscriptions (user_email, subscription) VALUES (?, ?)";
     database.query(SQL, [user_email, JSON.stringify(subscription)], (err) => {
         if (err) {
@@ -211,7 +211,7 @@ function sendPushNotification(userEmail, payload) {
                         database.query("DELETE FROM push_subscriptions WHERE subscription = ?", [row.subscription]);
                     }
                 });
-            } catch (err) {}
+            } catch (err) { }
         });
     });
 }
@@ -231,7 +231,7 @@ app.post('/handleform', (req, res) => {
         const { UserName, Passwords, email_id } = req.body;
         const normalizedEmail = email_id ? email_id.trim().toLowerCase() : "";
         const normalizedUsername = UserName ? UserName.trim() : "";
-        
+
         console.log(`📝 Signup attempt: ${normalizedUsername} (${normalizedEmail})`);
 
         if (!normalizedEmail || !Passwords || !normalizedUsername) {
@@ -475,10 +475,10 @@ app.post('/api/remove-friend', (req, res) => {
 // ✅ API to get removed friends
 app.get('/api/removed-friends', (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: "Unauthorized" });
-    
+
     const user_email = req.session.user.email;
     const SQL_COMMAND = "SELECT friend_email, friend_name FROM removed_friends WHERE user_email = ?";
-    
+
     database.query(SQL_COMMAND, [user_email], (err, results) => {
         if (err) {
             console.error("❌ DB Error fetching removed friends:", err);
@@ -491,7 +491,7 @@ app.get('/api/removed-friends', (req, res) => {
 // ✅ API to restore a friend
 app.post('/api/restore-friend', (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: "Unauthorized" });
-    
+
     const { friend_email } = req.body;
     const user_email = req.session.user.email;
     const user_name = req.session.user.username;
@@ -499,9 +499,9 @@ app.post('/api/restore-friend', (req, res) => {
     // 1. Get friend's name from removed_friends
     database.query("SELECT friend_name FROM removed_friends WHERE user_email = ? AND friend_email = ?", [user_email, friend_email], (err, results) => {
         if (err || results.length === 0) return res.status(400).json({ error: "Friend not found in removed list" });
-        
+
         const friend_name = results[0].friend_name;
-        
+
         // 2. Insert into friends table (both ways)
         const insertSQL = "INSERT IGNORE INTO friends (user_email, friend_email, friend_name) VALUES (?, ?, ?), (?, ?, ?)";
         database.query(insertSQL, [user_email, friend_email, friend_name, friend_email, user_email, user_name], (err2) => {
@@ -509,7 +509,7 @@ app.post('/api/restore-friend', (req, res) => {
                 console.error("❌ DB Error restoring friend:", err2);
                 return res.status(500).json({ error: "Failed to restore friend" });
             }
-            
+
             // 3. Delete from removed_friends
             database.query("DELETE FROM removed_friends WHERE user_email = ? AND friend_email = ?", [user_email, friend_email], (err3) => {
                 if (err3) console.error("❌ Error deleting from removed_friends:", err3);
@@ -539,7 +539,7 @@ app.post('/api/restore-friend', (req, res) => {
 app.post('/api/reject-call-push', (req, res) => {
     let myEmail = "";
     let callerEmail = req.body.caller ? req.body.caller.toLowerCase() : "";
-    
+
     if (req.body.token && req.body.receiver) {
         myEmail = req.body.receiver.toLowerCase();
         const offerData = activeOffers[myEmail];
@@ -564,10 +564,10 @@ app.post('/api/reject-call-push', (req, res) => {
         const SQL = "INSERT INTO call_history (caller_email, caller_name, receiver_email, call_type, status) VALUES (?, ?, ?, ?, 'rejected')";
         database.query(SQL, [offerData.from, offerData.name, myEmail, offerData.type]);
         delete activeOffers[myEmail];
-        
+
         // Notify caller that call was rejected
         io.to(callerEmail).emit('call-rejected', { from: myEmail, debug: "API reject-call-push" });
-        
+
         // Tell all receiver's devices to stop ringing
         io.to(myEmail).emit('call-rejected', { from: myEmail, selfReject: true });
     }
@@ -729,7 +729,7 @@ io.on('connection', (socket) => {
                 room_id: room_id
             };
             io.to(targetEmail).emit('push notification', pushData);
-            
+
             // Send actual Web Push for offline support
             let msgText = text;
             if (msgText.includes('<img')) msgText = '📷 Image';
@@ -749,14 +749,14 @@ io.on('connection', (socket) => {
     // =========================
     socket.on('call-user', (data) => {
         const { to, offer, from, name, type } = data;
-        
+
         // Store the active offer in memory
         const rejectToken = Math.random().toString(36).substring(2, 15);
         activeOffers[to.toLowerCase()] = { offer, from, name, type, rejectToken };
-        
+
         io.to(to.toLowerCase()).emit('video-offer', { offer, from, name, type });
         console.log(`📞 Call from ${from} to ${to}`);
-        
+
         // Send Web Push for incoming call
         const pushPayload = {
             title: `Incoming ${type} Call`,
@@ -764,7 +764,7 @@ io.on('connection', (socket) => {
             url: `/personal_chat.html?user=${encodeURIComponent(name)}&email=${encodeURIComponent(from)}&toEmail=${encodeURIComponent(to)}&rt=${rejectToken}`
         };
         sendPushNotification(to, pushPayload);
-        
+
         if (callIntervals[to.toLowerCase()]) {
             clearInterval(callIntervals[to.toLowerCase()]);
             delete callIntervals[to.toLowerCase()];
@@ -785,7 +785,7 @@ io.on('connection', (socket) => {
         const email = socket.request.session.user.email.toLowerCase();
         if (activeOffers[email] && activeOffers[email].from === data.from) {
             socket.emit('video-offer', activeOffers[email]);
-            
+
             // Stop sending push notifications because the user opened the app!
             if (callIntervals[email]) {
                 clearInterval(callIntervals[email]);
@@ -800,7 +800,7 @@ io.on('connection', (socket) => {
     socket.on('ringing', (data) => {
         if (!socket.request.session || !socket.request.session.user) return;
         const email = socket.request.session.user.email.toLowerCase();
-        
+
         // Stop sending push notifications because the user is already receiving the call in the app
         if (callIntervals[email]) {
             clearInterval(callIntervals[email]);
@@ -815,12 +815,12 @@ io.on('connection', (socket) => {
         const { to, answer } = data;
         if (socket.request.session.user) {
             const myEmail = socket.request.session.user.email.toLowerCase();
-            
+
             const offerData = activeOffers[myEmail];
             if (offerData) {
                 const SQL = "INSERT INTO call_history (caller_email, caller_name, receiver_email, call_type, status) VALUES (?, ?, ?, ?, 'completed')";
                 database.query(SQL, [offerData.from, offerData.name, myEmail, offerData.type]);
-                
+
                 // Stop ringing on answer
                 if (callIntervals[myEmail]) {
                     clearInterval(callIntervals[myEmail]);
@@ -857,19 +857,19 @@ io.on('connection', (socket) => {
         const { to } = data;
         if (socket.request.session.user) {
             const myEmail = socket.request.session.user.email.toLowerCase();
-            
+
             const offerData = activeOffers[myEmail];
             if (offerData) {
                 const SQL = "INSERT INTO call_history (caller_email, caller_name, receiver_email, call_type, status) VALUES (?, ?, ?, ?, 'rejected')";
                 database.query(SQL, [offerData.from, offerData.name, myEmail, offerData.type]);
             }
-            
+
             delete activeOffers[myEmail]; // Clear pending offer
             if (callIntervals[myEmail]) {
                 clearInterval(callIntervals[myEmail]);
                 delete callIntervals[myEmail];
             }
-            
+
             io.to(to.toLowerCase()).emit('call-rejected', {
                 from: myEmail,
                 debug: "Socket reject-call event"
@@ -886,14 +886,14 @@ io.on('connection', (socket) => {
         if (socket.request.session.user) {
             const myEmail = socket.request.session.user.email.toLowerCase();
             const targetEmail = to.toLowerCase();
-            
+
             // If the caller hung up before the receiver answered, log as missed
             const offerData = activeOffers[targetEmail];
             if (offerData && offerData.from === myEmail) {
                 const SQL = "INSERT INTO call_history (caller_email, caller_name, receiver_email, call_type, status) VALUES (?, ?, ?, ?, 'missed')";
                 database.query(SQL, [myEmail, socket.request.session.user.username, targetEmail, offerData.type]);
             }
-            
+
             delete activeOffers[myEmail];
             delete activeOffers[targetEmail]; // Also clean up offer
         }

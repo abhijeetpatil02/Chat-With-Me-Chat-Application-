@@ -34,15 +34,16 @@ async function subscribeUserToPush() {
     }
 }
 
+
 function initNotifications() {
     if ("Notification" in window) {
         if (Notification.permission === "default") {
             setTimeout(() => {
-                try { 
+                try {
                     Notification.requestPermission().then(permission => {
                         if (permission === "granted") subscribeUserToPush();
-                    }); 
-                } catch(e) {}
+                    });
+                } catch (e) { }
             }, 1000);
         } else if (Notification.permission === "granted") {
             subscribeUserToPush();
@@ -139,7 +140,7 @@ function injectStyles() {
         .cwm-btn-reject { background: #ff7675; color: white; }
     `;
     document.head.appendChild(style);
-    
+
     const container = document.createElement('div');
     container.id = 'cwm-notification-container';
     container.className = 'cwm-notification-container';
@@ -152,7 +153,7 @@ function showInAppNotification(title, body, type, onClickUrl, onAccept, onReject
 
     const toast = document.createElement('div');
     toast.className = 'cwm-toast';
-    
+
     let actionsHtml = '';
     if (type === 'call') {
         toast.style.borderLeftColor = '#00b894';
@@ -174,7 +175,7 @@ function showInAppNotification(title, body, type, onClickUrl, onAccept, onReject
     `;
 
     container.appendChild(toast);
-    
+
     // Trigger animation
     setTimeout(() => toast.classList.add('show'), 10);
 
@@ -182,7 +183,7 @@ function showInAppNotification(title, body, type, onClickUrl, onAccept, onReject
         // Stop it from navigating on click anywhere if it's a call
         const acceptBtn = toast.querySelector('.cwm-btn-accept');
         const rejectBtn = toast.querySelector('.cwm-btn-reject');
-        
+
         acceptBtn.onclick = (e) => {
             e.stopPropagation();
             if (onAccept) onAccept();
@@ -218,13 +219,13 @@ function showOSNotification(title, body, onClickUrl) {
                 silent: true
             });
             if (onClickUrl) {
-                notif.onclick = function(event) {
+                notif.onclick = function (event) {
                     event.preventDefault();
                     window.location.href = onClickUrl;
                     notif.close();
                 };
             }
-        } catch(e) {
+        } catch (e) {
             // Fails on some mobile browsers, which is why we have in-app notifications
         }
     }
@@ -234,7 +235,7 @@ function playMessageSound() {
     try {
         const audio = new Audio(getSavedMessageSound());
         audio.play().catch(e => console.warn('Audio play blocked', e));
-    } catch(e) {}
+    } catch (e) { }
 }
 
 let incomingCallRing = null;
@@ -276,7 +277,7 @@ function injectSettingsModal() {
             if (menu) menu.style.display = 'none';
             window.openSettingsModal();
         };
-        
+
         // Insert before Logout
         const hr = dropdownMenu.querySelector('hr');
         if (hr) {
@@ -330,7 +331,7 @@ function injectSettingsModal() {
     document.body.appendChild(div.firstElementChild);
 }
 
-window.openSettingsModal = function() {
+window.openSettingsModal = function () {
     const modal = document.getElementById('cwmSettingsModal');
     if (modal) {
         // Load current
@@ -342,7 +343,7 @@ window.openSettingsModal = function() {
     }
 }
 
-window.closeSettingsModal = function() {
+window.closeSettingsModal = function () {
     const modal = document.getElementById('cwmSettingsModal');
     if (modal) modal.style.display = 'none';
     if (window.testAudioNode) {
@@ -351,11 +352,11 @@ window.closeSettingsModal = function() {
     }
 }
 
-window.testSound = function(type) {
+window.testSound = function (type) {
     if (window.testAudioNode) {
         window.testAudioNode.pause();
     }
-    
+
     let url;
     if (type === 'ringtone') {
         const val = document.getElementById('cwmRingtoneSelect').value;
@@ -364,23 +365,23 @@ window.testSound = function(type) {
         const val = document.getElementById('cwmMessageSoundSelect').value;
         url = MESSAGE_SOUNDS[val] || MESSAGE_SOUNDS['beep'];
     }
-    
+
     window.testAudioNode = new Audio(url);
     window.testAudioNode.play().catch(e => console.error(e));
 }
 
-window.saveSettings = function() {
+window.saveSettings = function () {
     const r = document.getElementById('cwmRingtoneSelect').value;
     const m = document.getElementById('cwmMessageSoundSelect').value;
     localStorage.setItem('cwm_ringtone', r);
     localStorage.setItem('cwm_message_sound', m);
-    
+
     // Update incomingCallRing if exists
     if (incomingCallRing) {
         incomingCallRing = new Audio(getSavedRingtone());
         incomingCallRing.loop = true;
     }
-    
+
     closeSettingsModal();
     alert("Settings saved successfully!");
 }
@@ -388,29 +389,29 @@ window.saveSettings = function() {
 const socketCheckInterval = setInterval(() => {
     // Use window.socket to avoid Temporal Dead Zone issues with 'const socket'
     const currentSocket = window.socket || (typeof socket !== 'undefined' ? socket : null);
-    
+
     if (currentSocket) {
         clearInterval(socketCheckInterval);
-        
+
         currentSocket.on('push notification', data => {
             if (data.type === 'message') {
                 const urlParams = new URLSearchParams(window.location.search);
                 const currentContactEmail = urlParams.get('email');
-                
+
                 // If we are actively chatting with them, do nothing
                 if (window.location.pathname.includes('personal_chat.html') && currentContactEmail === data.fromEmail) {
                     return;
                 }
-                
+
                 playMessageSound();
-                
+
                 let msgText = data.text;
                 if (msgText.includes('<img')) msgText = '📷 Image';
                 else if (msgText.includes('<audio')) msgText = '🎤 Voice Message';
                 else if (msgText.includes('<a href')) msgText = '📎 Attachment';
-                
+
                 const clickUrl = `personal_chat.html?user=${encodeURIComponent(data.fromName)}&email=${encodeURIComponent(data.fromEmail)}`;
-                
+
                 // Show both OS and In-App
                 showOSNotification(`Message from ${data.fromName}`, msgText, clickUrl);
                 showInAppNotification(data.fromName, msgText, 'message', clickUrl, null, null, data.fromName.charAt(0).toUpperCase());
@@ -420,7 +421,7 @@ const socketCheckInterval = setInterval(() => {
         // Listen for incoming calls on ALL pages except personal_chat.html (which handles it internally)
         currentSocket.on('video-offer', data => {
             if (window.location.pathname.includes('personal_chat.html')) return; // handled by personal_chat.html modal
-            
+
             try {
                 if (!incomingCallRing) {
                     incomingCallRing = new Audio(getSavedRingtone());
@@ -428,27 +429,27 @@ const socketCheckInterval = setInterval(() => {
                 }
                 incomingCallRing.currentTime = 0;
                 incomingCallRing.play().catch(e => console.warn('Audio play blocked', e));
-                
+
                 // Also vibrate the device if supported
                 if (navigator.vibrate) {
                     navigator.vibrate([500, 1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000]);
                 }
-            } catch(e) {}
+            } catch (e) { }
 
             const acceptUrl = `personal_chat.html?user=${encodeURIComponent(data.name)}&email=${encodeURIComponent(data.from)}&acceptCall=true`;
-            
+
             showOSNotification(`Incoming Call from ${data.name}`, `Click to answer`, acceptUrl);
-            
+
             showInAppNotification(
-                `Incoming Call`, 
-                `${data.name} is calling you...`, 
-                'call', 
-                null, 
+                `Incoming Call`,
+                `${data.name} is calling you...`,
+                'call',
+                null,
                 () => { // Accept
                     if (incomingCallRing) { incomingCallRing.pause(); incomingCallRing.currentTime = 0; }
                     if (navigator.vibrate) navigator.vibrate(0); // Stop vibrating
                     window.location.href = acceptUrl;
-                }, 
+                },
                 () => { // Reject
                     if (incomingCallRing) { incomingCallRing.pause(); incomingCallRing.currentTime = 0; }
                     if (navigator.vibrate) navigator.vibrate(0);
@@ -464,7 +465,7 @@ const socketCheckInterval = setInterval(() => {
                 incomingCallRing.currentTime = 0;
             }
             if (navigator.vibrate) navigator.vibrate(0);
-            
+
             const toasts = document.querySelectorAll('.cwm-toast');
             toasts.forEach(toast => {
                 if (toast.innerHTML.includes('Incoming Call')) {
@@ -472,7 +473,7 @@ const socketCheckInterval = setInterval(() => {
                 }
             });
         });
-        
+
         currentSocket.on('call-rejected', () => {
             if (incomingCallRing) {
                 incomingCallRing.pause();

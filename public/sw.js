@@ -1,5 +1,6 @@
 const cacheName = "chat-app-cache-v6";
 
+
 const filesToCache = [
   "/",
   "/signup",
@@ -70,9 +71,9 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const data = event.data.json();
-      
+
       const isCall = data.title && data.title.includes('Incoming');
-      
+
       const options = {
         body: data.body,
         icon: '/icons/icon-192.png',
@@ -89,7 +90,7 @@ self.addEventListener('push', (event) => {
         // Direct MP3 link for better compatibility
         options.sound = 'https://raw.githubusercontent.com/rafaelbotazini/ringtone/master/iphone.mp3';
         options.silent = false;
-        
+
         // Add action buttons to the notification for quick response
         options.actions = [
           { action: 'accept', title: 'Answer', icon: '/icons/icon-192.png' },
@@ -131,30 +132,30 @@ self.addEventListener('notificationclick', (event) => {
 
   if (action === 'accept') {
     if (url.includes('?')) {
-        url += '&acceptCall=true';
+      url += '&acceptCall=true';
     } else {
-        url += '?acceptCall=true';
+      url += '?acceptCall=true';
     }
   } else if (action === 'reject') {
     // Notify the server to reject the call via a background fetch
     if (url) {
-       try {
-           const urlObj = new URL(url, self.location.origin);
-           const callerEmail = urlObj.searchParams.get('email');
-           const toEmail = urlObj.searchParams.get('toEmail');
-           const rt = urlObj.searchParams.get('rt');
-           if (callerEmail && toEmail && rt) {
-               event.waitUntil(
-                   fetch('/api/reject-call-push', {
-                       method: 'POST',
-                       headers: { 'Content-Type': 'application/json' },
-                       body: JSON.stringify({ caller: callerEmail, receiver: toEmail, token: rt })
-                   }).catch(err => console.error("Push reject error:", err))
-               );
-           }
-       } catch (e) {
-           console.error("URL parse error in sw.js:", e);
-       }
+      try {
+        const urlObj = new URL(url, self.location.origin);
+        const callerEmail = urlObj.searchParams.get('email');
+        const toEmail = urlObj.searchParams.get('toEmail');
+        const rt = urlObj.searchParams.get('rt');
+        if (callerEmail && toEmail && rt) {
+          event.waitUntil(
+            fetch('/api/reject-call-push', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ caller: callerEmail, receiver: toEmail, token: rt })
+            }).catch(err => console.error("Push reject error:", err))
+          );
+        }
+      } catch (e) {
+        console.error("URL parse error in sw.js:", e);
+      }
     }
     return;
   }

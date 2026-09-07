@@ -9,7 +9,7 @@ const mysql2 = require('mysql2');
 const webpush = require('web-push');
 const app = express();
 
-// your PWA / servicee worker code
+// your PWA / servicee worker codee
 // app.use(express.static("public"));
 
 app.use(express.json());

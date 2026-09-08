@@ -9,7 +9,8 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#6b73ff">
     <link rel="icon" type="image/png" href="/icons/icon-192.png">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -50,7 +51,7 @@
             justify-content: center;
             background: white;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             text-decoration: none;
             color: var(--text-main);
             font-size: 20px;
@@ -83,14 +84,14 @@
             border-radius: 20px;
             display: flex;
             align-items: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
             border: 1px solid #edf2f7;
             transition: 0.3s;
         }
 
         .profile-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
         }
 
         .avatar-box {
@@ -172,9 +173,17 @@
         }
 
         @media (max-width: 480px) {
-            .profile-card { padding: 12px; }
-            .btn-chat { padding: 8px 12px; }
-            .btn-remove { padding: 8px; }
+            .profile-card {
+                padding: 12px;
+            }
+
+            .btn-chat {
+                padding: 8px 12px;
+            }
+
+            .btn-remove {
+                padding: 8px;
+            }
         }
     </style>
 </head>
@@ -184,7 +193,7 @@
         <div class="header">
             <a href="homepage.html" class="back-btn">←</a>
             <h2>My Friends</h2>
-            <div style="width: 40px;"></div> <!-- Spacer -->
+            <div style="width: 40px;"></div> <!-- Spaacer -->
         </div>
 
         <div class="profile-list" id="profileList">
@@ -302,8 +311,15 @@
     </script>
     <style>
         @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
     </style>
 </body>
